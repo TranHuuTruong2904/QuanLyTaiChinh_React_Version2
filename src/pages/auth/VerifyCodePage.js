@@ -1,34 +1,39 @@
-import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "../../api/axios";
 import axiosApiInstance from "../../context/interceptor";
+import { useEffect } from "react";
 
-const ForgotPassPage = () => {
+const VerifyCodePage = () => {
 
+    const location = useLocation();
+    const {email} = location.state || {};
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         const payload = {
-            emailRequest : event.target.elements.email.value,
-        }
-        console.log(payload)
-        const result = await axios.post(axiosApiInstance.defaults.baseURL + `/api/auth/forgot-password`, payload);
+            emailRequest : email,
+            code: event.target.elements.code.value,
+        };
+        console.log(payload+ "1234");
+        const result = await axios.post(axiosApiInstance.defaults.baseURL + `/api/auth/verify-code`, payload);
         if(result?.data?.status === 101)
         {
             toast.error(result?.data?.message);
         }
         else
         {
-            toast.success("Mã xác thực đã được gửi qua Email của bạn");
-            navigate("/verify-code", { state: { email: event.target.elements.email.value } });
+            toast.success("Xác nhận thành công!");
+            navigate("/reset-pass", { state: { email: email } });
         }
     }
 
     useEffect(() => {
 
-    }, []);
+    }, [])
+    
 
     return (
         <>
@@ -44,19 +49,19 @@ const ForgotPassPage = () => {
                         <div className="form-toggle"></div>
                         <div className="form-panel one">
                             <div className="form-header">
-                                <h1>Quên mật khẩu?</h1>
+                                <h1>Mã xác thực lấy lại mật khẩu?</h1>
                             </div>
                             <div className="form-content">
                                 <form
                                   onSubmit={handleSubmit}
                                 >
                                     <div className="form-group">
-                                        <label htmlFor="email">Email:</label>
-                                        <input type="email" id="email" required />
+                                        <label htmlFor="code">Nhập mã xác thực:</label>
+                                        <input type="text" id="code" required />
                                     </div>
                                     <div className="form-group">
                                         <button variant="primary" type="submit" className="btn-submit">
-                                            Gửi mã
+                                            Xác nhận
                                         </button>
                                     </div>
                                     <p className="form-group text">
@@ -76,4 +81,4 @@ const ForgotPassPage = () => {
     )
 };
 
-export default ForgotPassPage;
+export default VerifyCodePage;

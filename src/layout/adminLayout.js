@@ -41,7 +41,7 @@ const adminLayout = (ChildComponent) => {
                 <Sidebar isActive={this.state.isActive} toggleSidebar={this.toggleSidebar} />
                 {/* <!-- Page content wrapper--> */}
                 <div className={this.state.isActive ? 'main' : "main close "} id="page-content-wrapper">
-                    <nav className="navbar-header-admin">
+                    <nav className="navbar-header-admin shadow">
                     </nav>
                     {/* <!-- Page content--> */}
                     <div className="container-fluid">

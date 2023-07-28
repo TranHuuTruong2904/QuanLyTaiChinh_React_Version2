@@ -16,7 +16,7 @@ body {
 }
 
 .nav-login {
-  background: rgb(189, 189, 189);
+  background: #ffffff;
   height: 60px;
   display: flex;
   /* justify-content: center; */
@@ -30,7 +30,7 @@ body {
 }
 
 .nav-login-icon {
-  color: #f8f827;
+  color: #278ef8;
   justify-self: start;
   margin-left: 20px;
   cursor: pointer;
@@ -48,7 +48,7 @@ body {
 .form {
   z-index: 15;
   position: relative;
-  background: rgb(223, 222, 222);
+  background: rgb(241, 240, 240);
   width: 630px;
   border-radius: 10px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
@@ -56,7 +56,6 @@ body {
   margin: 85px auto 65px;
   overflow: hidden;
 }
-
 
 .form-toggle {
   z-index: 10;

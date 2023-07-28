@@ -8,7 +8,7 @@
 }
 
 .dropdown-menu-admin li {
-    background: gray;
+    background: rgb(168, 167, 167);
     cursor: pointer;
 }
 
@@ -16,19 +16,20 @@
 {
     display: flex;
     color: #fff;
+    background: rgb(168, 167, 167) !important;
     padding: 20px 15px;
     gap: 15px;
     transition: all 0.5s;
 }
 
 .link-logout:hover {
-    background-color: #b0b7bf !important;
+    background-color: blue !important;
     border-radius: 4px;
     transition: all 0.2s ease-out;
 }
 
 .dropdown-menu-admin li:hover {
-    background-color: #b0b7bf;
+    background-color: blue;
 }
 
 .dropdown-menu-admin.clicked {

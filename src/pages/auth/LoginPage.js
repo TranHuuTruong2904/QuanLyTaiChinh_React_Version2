@@ -21,7 +21,7 @@ const LoginPage = () => {
     return (
         <>
             <div>
-                <nav className="nav-login">
+                <nav className="nav-login shadow">
                     <h1 className="nav-login-icon">
                         <i className='fa fa-coins'></i>
                         FINANCIAL MANAGEMENT

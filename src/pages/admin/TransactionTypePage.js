@@ -7,6 +7,7 @@ import ReactLoading from "react-loading"
 import { FaPen, FaTrashAlt } from "react-icons/fa";
 import { Modal, Form, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { Pagination } from "antd";
 
 const TransactionTypePage = () => {
 
@@ -18,6 +19,17 @@ const TransactionTypePage = () => {
     const [name, setName] = useState();
     const [id, setID] = useState();
     const [change, setChange] = useState(false);
+    const [pageSize, setPageSize] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const paginate = (array, pageNumber, pageSize) => {
+        const startIndex = (pageNumber - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return array.slice(startIndex, endIndex);
+    };
+    const currentTransactionTypeList = paginate(listTransactionType, currentPage, pageSize);
+    const handlePageChange = (pageNumber, pageSize) => {
+        setCurrentPage(pageNumber);
+    };
 
     async function getCategory() {
         const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction-type/all`);
@@ -71,14 +83,14 @@ const TransactionTypePage = () => {
             {
                 load ?
                     <div className="d-flex justify-content-center">
-                        <div className="table-container" style={{ minWidth: '80%' }}>
+                        <div className="table-container" style={{ minWidth: '90%' }}>
                             <div className="row">
                                 <div className="col">
                                     <h4 className="pb-2 mb-0">Danh sách loại giao dịch</h4>
                                 </div>
                                 <div className="col text-right">
-                                    <button className="btn btn-default low-height-btn" onClick={handleShowAdd}> 
-                                        <i className="fa fa-plus"></i>
+                                    <button className="btn btn-default low-height-btn" onClick={handleShowAdd}>
+                                        Thêm <i className="fa fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
@@ -86,25 +98,25 @@ const TransactionTypePage = () => {
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col" className="col-2">Mã danh mục</th>
-                                            <th scope="col" className="col-3">Tên loại giao dịch</th>
-                                            <th scope="col" className="col-1">Tác vụ</th>
+                                            <th scope="col" className="col-2 col-name">Mã loại giao dịch</th>
+                                            <th scope="col" className="col-3 col-name">Tên loại giao dịch</th>
+                                            <th scope="col" className="col-1 col-name">Tác vụ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {listTransactionType.map((item) => (
+                                        {currentTransactionTypeList.map((item) => (
                                             <tr key={item.id}>
                                                 <td>{item.id}</td>
                                                 <td>{item.name}</td>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
                                                     <button type="button"
                                                         className="btn btn-outline-warning btn-light btn-sm mx-sm-1 px-lg-2 w-32"
-                                                        title="Chỉnh sửa" id={item.id} onClick={handleInfo} title ={item.name}
-                                                        >
-                                                        <FaPen/>
+                                                        title={item.name} id={item.id} onClick={handleInfo}
+                                                    >
+                                                        <FaPen />
                                                     </button>
 
-                                                    <button type="button" id={item.id}  
+                                                    <button type="button" id={item.id}
                                                         className="btn btn-outline-danger btn-light btn-sm mx-sm-1 px-lg-2 w-32"
                                                         title="Xóa" onClick={handleDelete}><FaTrashAlt />
                                                     </button>
@@ -113,6 +125,12 @@ const TransactionTypePage = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            <Pagination
+                                onChange={handlePageChange}
+                                current={currentPage}
+                                pageSize={pageSize}
+                                total={listTransactionType.length}
+                            />
                         </div>
                         {
                             <Modal show={show} onHide={handleClose}>

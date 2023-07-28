@@ -33,7 +33,7 @@ const UserHeader = () => {
 
     return (
         <>
-            <nav className="navbar-header">
+            <nav class="navbar header nav-light navbar-expand-lg navbar-light shadow fixed-top">
                 <Link to="/home" className="navbar-logo" onClick={closeMobileMenu}>
                     <i className='fa fa-coins'></i>
                     FINANCE
@@ -69,13 +69,13 @@ const UserHeader = () => {
                     </li>
                     <li className="nav-item">
                         <NavLink to="/statistical" activeClassName="active" className="nav-links" onClick={closeMobileMenu}>
-                            Báo cáo
+                            Thống kê
                         </NavLink>
                     </li>
                     <li className="nav-item"
                         onMouseEnter={onMouseEnter}
                         onMouseLeave={onMouseLeave}>
-                        <Link to="/setting" className="nav-links" onClick={closeMobileMenu}>
+                        <Link to="/profile" className="nav-links" onClick={closeMobileMenu}>
                             Cài đặt <i className='fas fa-caret-down' />
                         </Link>
                         {dropdown && <Dropdown />}

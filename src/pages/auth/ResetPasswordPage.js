@@ -1,36 +1,43 @@
-import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "../../api/axios";
 import axiosApiInstance from "../../context/interceptor";
 
-const ForgotPassPage = () => {
+const ResetPasswordPage = () => {
+
+    const location = useLocation();
+    const {email} = location.state || {};
+    console.log(email)
 
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const payload = {
-            emailRequest : event.target.elements.email.value,
+        if (event.target.elements.newPass.value !==
+            event.target.elements.newPassRepeat.value) {
+            toast.error("Xác nhận mật khẩu không khớp!");
+            return;
         }
-        console.log(payload)
-        const result = await axios.post(axiosApiInstance.defaults.baseURL + `/api/auth/forgot-password`, payload);
-        if(result?.data?.status === 101)
+
+        const payload = {
+            email : email,
+            newPassword : event.target.elements.newPass.value,
+        };
+
+        const result = await axios.post(axiosApiInstance.defaults.baseURL + `/api/auth/reset-password`, payload);
+        if(result?.data?.status === 200)
         {
-            toast.error(result?.data?.message);
+            toast.success("Cấp lại mật khẩu thành công!");
+            navigate("/login");
         }
         else
         {
-            toast.success("Mã xác thực đã được gửi qua Email của bạn");
-            navigate("/verify-code", { state: { email: event.target.elements.email.value } });
+            toast.error(result?.data?.message);
         }
     }
 
-    useEffect(() => {
-
-    }, []);
-
-    return (
+    return(
         <>
             <div>
                 <nav className="nav-login">
@@ -44,19 +51,23 @@ const ForgotPassPage = () => {
                         <div className="form-toggle"></div>
                         <div className="form-panel one">
                             <div className="form-header">
-                                <h1>Quên mật khẩu?</h1>
+                                <h1>Đặt lại mật khẩu</h1>
                             </div>
                             <div className="form-content">
                                 <form
                                   onSubmit={handleSubmit}
                                 >
                                     <div className="form-group">
-                                        <label htmlFor="email">Email:</label>
-                                        <input type="email" id="email" required />
+                                        <label htmlFor="newPass">Nhập mật khẩu mới:</label>
+                                        <input type="password" id="newPass" required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="newPassRepeat">Nhập lại mật khẩu mới:</label>
+                                        <input type="password" id="newPassRepeat" required />
                                     </div>
                                     <div className="form-group">
                                         <button variant="primary" type="submit" className="btn-submit">
-                                            Gửi mã
+                                            Cập nhật mật khẩu
                                         </button>
                                     </div>
                                     <p className="form-group text">
@@ -74,6 +85,6 @@ const ForgotPassPage = () => {
             </div>
         </>
     )
-};
+}
 
-export default ForgotPassPage;
+export default ResetPasswordPage;

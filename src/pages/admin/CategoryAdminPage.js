@@ -7,6 +7,8 @@ import ReactLoading from "react-loading"
 import { FaPen, FaTrashAlt } from "react-icons/fa";
 import { Modal, Form, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
+import axios from "../../api/axios";
+import { Pagination } from "antd";
 
 const CategoryAdminPage = () => {
 
@@ -18,9 +20,20 @@ const CategoryAdminPage = () => {
     const [name, setName] = useState();
     const [id, setID] = useState();
     const [change, setChange] = useState(false);
+    const [pageSize, setPageSize] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const paginate = (array, pageNumber, pageSize) => {
+        const startIndex = (pageNumber - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return array.slice(startIndex, endIndex);
+    };
+    const currentCategoryList = paginate(listCategory, currentPage, pageSize);
+    const handlePageChange = (pageNumber, pageSize) => {
+        setCurrentPage(pageNumber);
+    };
 
     async function getCategory() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/category/all`);
+        const result = await axios.get(axiosApiInstance.defaults.baseURL + `/api/category/all`);
         setLoad(true);
         setListCategory(result?.data?.data);
     }
@@ -39,7 +52,7 @@ const CategoryAdminPage = () => {
     }
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         const payload = {
             name: name
         }
@@ -71,14 +84,14 @@ const CategoryAdminPage = () => {
             {
                 load ?
                     <div className="d-flex justify-content-center">
-                        <div className="table-container" style={{ minWidth: '80%' }}>
+                        <div className="table-container" style={{ minWidth: '90%' }}>
                             <div className="row">
                                 <div className="col">
-                                    <h4 className="pb-2 mb-0">Danh sách danh mục</h4>
+                                    <h4 className="pb-2 mb-0">Danh sách loại danh mục</h4>
                                 </div>
                                 <div className="col text-right">
                                     <button className="btn btn-default low-height-btn" title="Thêm" onClick={handleShowAdd}>
-                                        <i className="fa fa-plus"></i>
+                                        Thêm <i className="fa fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
@@ -86,20 +99,20 @@ const CategoryAdminPage = () => {
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col" className="col-2">Mã danh mục</th>
-                                            <th scope="col" className="col-3">Tên danh mục</th>
-                                            <th scope="col" className="col-1">Tác vụ</th>
+                                            <th scope="col" className="col-2 col-name">Mã loại danh mục</th>
+                                            <th scope="col" className="col-3 col-name">Tên danh mục</th>
+                                            <th scope="col" className="col-1 col-name">Tác vụ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {listCategory.map((item) => (
+                                        {currentCategoryList.map((item) => (
                                             <tr key={item.id}>
                                                 <td>{item.id}</td>
                                                 <td>{item.name}</td>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
                                                     <button type="button"
                                                         className="btn btn-outline-warning btn-light btn-sm mx-sm-1 px-lg-2 w-32"
-                                                        title="Chỉnh sửa" id={item.id} onClick={handleInfo} title={item.name}
+                                                        title={item.name} id={item.id} onClick={handleInfo}
                                                     >
                                                         <FaPen />
                                                     </button>
@@ -113,6 +126,12 @@ const CategoryAdminPage = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            <Pagination
+                                onChange={handlePageChange}
+                                current={currentPage}
+                                pageSize={pageSize}
+                                total={listCategory.length}
+                            />
                         </div>
                         {
                             <Modal show={show} onHide={handleClose}>
@@ -121,7 +140,7 @@ const CategoryAdminPage = () => {
                                 </Modal.Header>
                                 <Modal.Body>
                                     <Form
-                                    onSubmit={handleSubmit}
+                                        onSubmit={handleSubmit}
                                     >
                                         <Form.Group className="mb-2">
                                             <Form.Control type="text" placeholder="Tên danh mục" name="name" required
@@ -144,29 +163,6 @@ const CategoryAdminPage = () => {
                         <ReactLoading type={'cylon'} color='#fffff' height={'33px'} width={'9%'} />
                     </div>
             }
-
-            {/* <Modal
-                show={showModalDelete}
-                onHide={() => setShowModalDelete(false)}
-                backdrop="static"
-                keyboard={false}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Xóa thẻ</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>Bạn có chắc chắn muốn xóa thẻ không?</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModalDelete(false)}>
-                        Thoát
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => handleDeleteItem(selectedCardId)}
-                    >
-                        Xóa
-                    </Button>
-                </Modal.Footer>
-            </Modal> */}
         </>
     );
 }

@@ -14,12 +14,15 @@ import BudgetPage from './pages/user/BudgetPage';
 import GoalPage from './pages/user/GoalPage';
 import TransactionPage from './pages/user/TransactionPage';
 import StatisticalPage from './pages/user/StatisticalPage';
+import UserProfile from './pages/user/UserProfile';
 // admin
 import DashBoardPage from './pages/admin/DashBoardPage';
 import CategoryAdminPage from './pages/admin/CategoryAdminPage';
 import ManagerUserPage from './pages/admin/ManagerUserPage';
 import TransactionTypePage from './pages/admin/TransactionTypePage';
-
+import VerifyCodePage from './pages/auth/VerifyCodePage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import AdminProfile from './pages/admin/AdminProfile';
 
 function App() {
   const tokens = JSON.parse(localStorage.getItem("tokens"));
@@ -32,8 +35,11 @@ function App() {
         <Route path='/login' element={<LoginPage/>}/>
         <Route path='/register' element={<RegisterPage/>}/>
         <Route path='/forgot-pass' element={<ForgotPassPage />}/>
+        <Route path='/verify-code' element={<VerifyCodePage />}/>
+        <Route path='/reset-pass' element={<ResetPasswordPage />}/>
         {permission == "ADMIN" ? (
           <>
+            <Route path='/profile' element={<AdminProfile />}/>
             <Route path='/home' element={<DashBoardPage />}/>
             <Route path='/category' element={<CategoryAdminPage />}/>
             <Route path='/user' element={<ManagerUserPage />}/>
@@ -41,12 +47,14 @@ function App() {
           </>
         ) : (
           <>
+          <Route path='/profile' element={<UserProfile />}/>
             <Route path='/home' element={<HomePage />}/>
             <Route path='/category' element={<CategoryPage />}/>
             <Route path='/budget' element={<BudgetPage />}/>
             <Route path='/goal' element={<GoalPage />}/>
             <Route path='/transaction' element={<TransactionPage />}/>
             <Route path='/statistical' element={<StatisticalPage />}/>
+            <Route path='/change-password' element={<ChangePassPage />}/>
           </>
         )};
       </Routes>

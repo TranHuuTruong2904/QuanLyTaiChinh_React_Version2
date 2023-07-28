@@ -64,6 +64,10 @@ ul ul a {
   background: #6d7fcc;
 }
 
+.col-name {
+  background: rgb(223, 227, 250) !important;
+}
+
 /* The sidebar menu */
 .fixed-profile {
   display: none;
@@ -211,7 +215,7 @@ h1, h2, h3, h4, h5, h6 {
 
 p, span, a {
   font-family: var(--default-font-regular);
-  line-height: 22px !important;
+  /* line-height: 22px !important; */
 }
 
 .sidenav p.bold, .sidenav span.bold, .sidenav a.bold {
@@ -441,15 +445,15 @@ button{
 }
 
 .btn-default {
-  background-color: rgb(118, 118, 255) !important;
-  color: var(--white);
+  background-color: #6c6cee;
+  color: #fff;
 }
 
 .btn-default:hover,
 .btn-default:active,
 .btn-default:focus {
-  background-color: rgb(16, 12, 243) !important;
-  color: var(--white);
+  background-color: rgb(53, 50, 251) !important;
+  color: #fff;
 }
 
 .btn-primary:hover,
@@ -571,12 +575,12 @@ button{
   width: 100%;
   max-width: 100%;
   border-top: .2rem solid #d8dbe0;
-  padding: .5rem;
+  padding: .2rem;
   border-radius: .3rem;
 }
 
 .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
-  padding: .8rem;
+  padding: .5rem;
   line-height: 1.42857143;
 }
 
@@ -652,7 +656,7 @@ table tbody tr:focus-within, table tbody tr:hover {
 }
 
 .table-container {
-  margin-top: 20px !important;
+  margin-top: 80px !important;
   display: inline-block;
 }
 
@@ -747,4 +751,37 @@ table tbody tr:focus-within, table tbody tr:hover {
 }
 select {
   background: #fff url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20"><path d="M13.418 7.859a.695.695 0 01.978 0 .68.68 0 010 .969l-3.908 3.83a.697.697 0 01-.979 0l-3.908-3.83a.68.68 0 010-.969.695.695 0 01.978 0L10 11l3.418-3.141z"/></svg>') right 5px center no-repeat
+}
+
+.search-input{
+  height: 20px !important;
+}
+
+.container-button {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.button-layout {
+  width: 50%;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid rgb(235, 235, 235);
+}
+
+.button-layout:hover{
+  transition: all 0.2s ease-out;
+}
+
+.active-button {
+  background-color: rgb(92, 92, 247);
+  color: #fff;
+}
+
+
+.test{
+  margin-top: 100px;
 }
