@@ -6,12 +6,14 @@ import { FaSearch } from "react-icons/fa";
 import { FaPen, FaTrashAlt } from "react-icons/fa";
 import axiosApiInstance from "../../context/interceptor";
 import { useEffect } from "react";
-import { Pagination, DatePicker, Form, Modal, Select, TreeSelect } from "antd";
+import { DatePicker, Form, Modal, TreeSelect } from "antd";
 import { toast } from "react-toastify";
+const { RangePicker } = DatePicker;
 
 const TransactionPage = () => {
-    const [listTransactionPersonal, setListTransactionPersonal] = useState([]);
-    const [listTransactionFamily, setListTransactionFamily] = useState([]);
+    const [allTransactionIncomeNearest, setListTransactionIncomeNearest] = useState([]);
+    const [allTransactionExpenseNearest, setListTransactionExpenseNearest] = useState([]);
+    const [allTransactionExpenseFamilyNearest, setListTransactionExpenseFamilyNearest] = useState([]);
     const [listUserCategory, setListUserCategory] = useState([]);
     const [listIncomeCategory, setListIncomeCategory] = useState([]);
     const [listExpenseCategory, setListExpenseCategory] = useState([]);
@@ -19,9 +21,17 @@ const TransactionPage = () => {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [isButton1Selected, setIsButton1Selected] = useState(true);
     const [isButton2Selected, setIsButton2Selected] = useState(false);
+    const [searchTextFamily, setSearchTextFamily] = useState('');
+    const [searchTextPersonalIncome, setSearchTextPersonalIncome] = useState('');
+    const [searchTextPersonalExpense, setSearchTextPersonalExpense] = useState('');
     const today = new Date();
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+    const [startDateTransactionIncome, setStartDateTransactionIncome] = useState('');
+    const [endDateTransactionIncome, setEndDateTransactionIncome] = useState('');
+    const [startDateTransactionExpense, setStartDateTransactionExpense] = useState('');
+    const [endDateTransactionExpense, setEndDateTransactionExpense] = useState('');
+
     const handleDateChange = (date) => {
         const dateSelected = new Date(date);
         setSelectedMonth(dateSelected.getMonth() + 1);
@@ -30,14 +40,6 @@ const TransactionPage = () => {
 
     const [load, setLoad] = useState(false);
     const [change, setChange] = useState(false);
-    const [pageSize, setPageSize] = useState(8);
-    const [currentPageTranPersonal, setCurrentPageTranPersonal] = useState(1);
-    const [currentPageTranFamily, setCurrentPageTranFamily] = useState(1);
-    const paginate = (array, pageNumber, pageSize) => {
-        const startIndex = (pageNumber - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        return array.slice(startIndex, endIndex);
-    };
 
     const [newTransaction, setNewTransaction] = useState({
         name: "",
@@ -70,15 +72,6 @@ const TransactionPage = () => {
 
     const [form] = Form.useForm();
 
-    const currentTranPersonal = paginate(listTransactionPersonal, currentPageTranPersonal, pageSize);
-    const currentTranFamily = paginate(listTransactionFamily, currentPageTranFamily, pageSize);
-    const handlePagePersonal = (pageNumber, pageSize) => {
-        setCurrentPageTranPersonal(pageNumber);
-    };
-    const handlePageFamily = (pageNumber, pageSize) => {
-        setCurrentPageTranFamily(pageNumber);
-    };
-
     const handleButton1Click = () => {
         setIsButton1Selected(true);
         setIsButton2Selected(false);
@@ -89,56 +82,175 @@ const TransactionPage = () => {
         setIsButton2Selected(true);
     };
 
-    async function getListTransactionPersonal() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/personal/${selectedMonth}/${selectedYear}`);
-        setLoad(true);
-        if (result?.data?.status === 101) {
-            toast.error(result?.data?.message);
+    async function getAllTransactionIncomeNearest() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/10-income-personal-nearest`);
+        if (result?.data?.status === 200) {
+            setListTransactionIncomeNearest(result?.data?.data);
         }
-        setListTransactionPersonal(result?.data?.data || []);
     };
 
-    async function getListTransactionFamily() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/family/${selectedMonth}/${selectedYear}`);
-        setLoad(true);
-        if (result?.data?.status === 101) {
-            toast.error(result?.data?.message);
+    async function getAllTransactionExpenseNearest() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/10-expense-personal-nearest`);
+        if (result?.data?.status === 200) {
+            setListTransactionExpenseNearest(result?.data?.data);
         }
-        setListTransactionFamily(result?.data?.data || []);
+    };
+
+    const handleKeyPressFamily = (e) => {
+        if (e.key === 'Enter') {
+            setSearchTextFamily(e.target.value);
+        }
+    };
+
+    const handleKeyPresPersonalIncome = (e) => {
+        if (e.key === 'Enter') {
+            setSearchTextPersonalIncome(e.target.value);
+        }
+    };
+
+    const handleKeyPresPersonalExpense = (e) => {
+        if (e.key === 'Enter') {
+            setSearchTextPersonalExpense(e.target.value);
+        }
+    };
+
+    const formatDate = (date) => {
+        const dateSelected = new Date(date);
+        const year = dateSelected.getFullYear();
+        const month = String(dateSelected.getMonth() + 1).padStart(2, '0');
+        const day = String(dateSelected.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const handleRangePickerChangeIncome = (dates) => {
+        if (dates && dates.length === 2) {
+            const [start, end] = dates;
+            const formattedStartDate = formatDate(start); // Định dạng startDate thành chuỗi yyyy-mm-dd
+            const formattedEndDate = formatDate(end); // Định dạng endDate thành chuỗi yyyy-mm-dd
+            setStartDateTransactionIncome(formattedStartDate);
+            setEndDateTransactionIncome(formattedEndDate);
+        } else {
+            setStartDateTransactionIncome(null);
+            setEndDateTransactionIncome(null);
+        }
+    };
+
+    const handleRangePickerChangeExpense = (dates) => {
+        if (dates && dates.length === 2) {
+            const [start, end] = dates;
+            const formattedStartDate = formatDate(start); // Định dạng startDate thành chuỗi yyyy-mm-dd
+            const formattedEndDate = formatDate(end); // Định dạng endDate thành chuỗi yyyy-mm-dd
+            setStartDateTransactionExpense(formattedStartDate);
+            setEndDateTransactionExpense(formattedEndDate);
+        } else {
+            setStartDateTransactionExpense(null);
+            setEndDateTransactionExpense(null);
+        }
+    };
+
+    async function listTransactionFamilySearch() {
+        const encodedSearchText = encodeURIComponent(searchTextFamily);
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/search-family?name=${encodedSearchText}`);
+        if (result?.data?.status === 101) {
+            toast.error("Không có giao dịch cần tìm kiếm");
+            setListTransactionExpenseFamilyNearest([]);
+        }
+        else {
+            setListTransactionExpenseFamilyNearest(result?.data?.data);
+        }
+    };
+
+    async function listTransactionIncomePersonalSearch() {
+        const encodedSearchText = encodeURIComponent(searchTextPersonalIncome);
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/search-personal-income?name=${encodedSearchText}`);
+        if (result?.data?.status === 101) {
+            toast.error("Không có giao dịch cần tìm kiếm");
+            setListTransactionIncomeNearest([]);
+        }
+        else {
+            setListTransactionIncomeNearest(result?.data?.data);
+        }
+    };
+
+    async function listTransactionExpensePersonalSearch() {
+        const encodedSearchText = encodeURIComponent(searchTextPersonalExpense);
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/search-personal-expense?name=${encodedSearchText}`);
+        if (result?.data?.status === 101) {
+            toast.error("Không có giao dịch cần tìm kiếm");
+            setListTransactionExpenseNearest([]);
+        }
+        else {
+            setListTransactionExpenseNearest(result?.data?.data);
+        }
+    };
+
+    async function listTransactionFamilyInMonth() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/all-expense-family-month/${selectedMonth}/${selectedYear}`);
+        if (result?.data?.status === 101) {
+            toast.success("Không có giao gia đình trong tháng " + selectedMonth);
+            setListTransactionExpenseFamilyNearest([]);
+        }
+        else {
+            setListTransactionExpenseFamilyNearest(result?.data?.data);
+        }
     };
 
     async function getUserCategory() {
         const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/user-category/all`);
         setLoad(true);
-        if (result?.data?.status == 101) {
-            toast.success(result?.data?.message);
-        }
-        else {
+        if (result?.data?.status === 200) {
             setListUserCategory(result?.data?.data);
-        };
+        }
     };
 
     async function getIncomeUserCategory() {
         const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/user-category/income`);
         setLoad(true);
-        if (result?.data?.status == 101) {
-            toast.success(result?.data?.message);
-        }
-        else {
+        if (result?.data?.status === 200) {
             setListIncomeCategory(result?.data?.data);
-        };
+        }
     };
 
     async function getExpenseUserCategory() {
         const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/user-category/expense`);
         setLoad(true);
-        if (result?.data?.status == 101) {
-            toast.success(result?.data?.message);
+        if (result?.data?.status === 200) {
+            setListExpenseCategory(result?.data?.data);
+        }
+    };
+
+    // lấy giao dịch cá nhân và thu nhập theo khoảng thời gian
+    async function getTransactionPersonalIncomeTimeRange() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/income-personal-timerange/${startDateTransactionIncome}/${endDateTransactionIncome}`);
+        if (result?.data?.status === 200) {
+            setListTransactionIncomeNearest(result?.data?.data);
         }
         else {
-            setListExpenseCategory(result?.data?.data);
-        };
+            toast.success("Không có giao dịch trong khoảng thời gian");
+            setListTransactionIncomeNearest([]);
+        }
     };
+
+    async function getTransactionPersonalExpenseTimeRange() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/expense-personal-timerange/${startDateTransactionExpense}/${endDateTransactionExpense}`);
+        if (result?.data?.status === 200) {
+            setListTransactionExpenseNearest(result?.data?.data);
+        }
+        else {
+            toast.success("Không có giao dịch trong khoảng thời gian");
+            setListTransactionExpenseNearest([]);
+        }
+    };
+
+    useEffect(() => {
+        if (startDateTransactionIncome !== '' && endDateTransactionIncome !== '') {
+            getTransactionPersonalIncomeTimeRange();
+        }
+
+        if (startDateTransactionExpense !== '' && endDateTransactionExpense !== '') {
+            getTransactionPersonalExpenseTimeRange();
+        }
+    }, [startDateTransactionIncome, endDateTransactionIncome, startDateTransactionExpense, endDateTransactionExpense]);
 
     const transformToTreeData = (list) => {
         const treeData = list.map((item) => ({
@@ -169,7 +281,7 @@ const TransactionPage = () => {
         catch (error) {
             toast.error("Có lỗi. Vui lòng thử lại!");
         }
-    }
+    };
 
     const handleAddTransactionFamily = async () => {
         try {
@@ -220,7 +332,20 @@ const TransactionPage = () => {
         {
             toast.error("Có lỗi. Vui lòng thử lại!");
         }
-    }
+    };
+
+    // lấy tổng các loại giao dịch
+    const sumTotalIncomeTransactionPersonal = allTransactionIncomeNearest.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.amount;
+    }, 0);
+
+    const sumTotalExpenseTransactionPersonal = allTransactionExpenseNearest.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.amount;
+    }, 0);
+
+    const sumTotalExpenseTransactionFamily = allTransactionExpenseFamilyNearest.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.amount;
+    }, 0);
 
     // xử lý các modal thêm sửa xóa
     const [isModalAddTransaction, setIsModalAddTransaction] = useState(false);
@@ -238,8 +363,15 @@ const TransactionPage = () => {
     };
 
     useEffect(() => {
-        getListTransactionFamily();
-        getListTransactionPersonal();
+        listTransactionFamilySearch();
+        listTransactionExpensePersonalSearch();
+        listTransactionIncomePersonalSearch();
+    }, [searchTextFamily, searchTextPersonalExpense, searchTextPersonalIncome]);
+
+    useEffect(() => {
+        getAllTransactionIncomeNearest();
+        getAllTransactionExpenseNearest();
+        listTransactionFamilyInMonth();
         getUserCategory();
         getIncomeUserCategory();
         getExpenseUserCategory()
@@ -262,21 +394,29 @@ const TransactionPage = () => {
                         load ?
                             <div className="justify-content-center">
                                 <div className="row">
-                                    <div className="col text-left" style={{ display: "flex", gap: "5px" }}>
-                                        <Input
-                                            style={{ width: "200px" }}
-                                            size="small"
-                                            placeholder="Tìm kiếm giao dịch"
-                                            prefix={<FaSearch />}
-                                        />
-                                        <DatePicker picker="month" placeholder="Chọn tháng" size="small" onChange={handleDateChange} />
-                                    </div>
                                     <div className="col text-right">
                                         <button className="btn btn-default low-height-btn" title="Thêm" onClick={() => {
                                             setIsModalAddTransaction(true);
                                         }}>
                                             Thêm <i className="fa fa-plus"></i>
                                         </button>
+                                    </div>
+                                </div>
+                                <div className="row">
+                                    <div className="col text-left">
+                                        <Input
+                                            style={{ width: "200px" }}
+                                            size="small"
+                                            placeholder="Tìm kiếm giao dịch"
+                                            prefix={<FaSearch />}
+                                            onKeyDown={handleKeyPresPersonalExpense}
+                                        />
+                                    </div>
+                                    <div className="col text-center" style={{ margin: "5px" }}>
+                                        <h5>Chi tiêu cá nhân gần đây</h5>
+                                    </div>
+                                    <div className="col text-right">
+                                        <RangePicker size="small" onChange={handleRangePickerChangeExpense} />
                                     </div>
                                 </div>
                                 <div className="d-flex text-muted overflow-auto center">
@@ -286,14 +426,14 @@ const TransactionPage = () => {
                                                 <th scope="col" className="col-2 col-name">Tên giao dịch</th>
                                                 <th scope="col" className="col-1 col-name">Số tiền</th>
                                                 <th scope="col" className="col-1 col-name">Ngày GD</th>
-                                                <th scope="col" className="col-3 col-name">Địa điểm</th>
+                                                <th scope="col" className="col-2 col-name">Địa điểm</th>
                                                 <th scope="col" className="col-2 col-name">Danh mục</th>
                                                 <th scope="col" className="col-1 col-name">Tác vụ</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {currentTranPersonal.map((item, index) => (
-                                                <tr key={item.name}>
+                                            {allTransactionExpenseNearest.map((item, index) => (
+                                                <tr key={item.id}>
                                                     <td>{item.name}</td>
                                                     <td>{item.amount?.toLocaleString("vi", {
                                                         style: "currency",
@@ -320,15 +460,91 @@ const TransactionPage = () => {
                                                         </button>
                                                     </td>
                                                 </tr>))}
+                                            <td>Tổng: {sumTotalExpenseTransactionPersonal?.toLocaleString("vi", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            })}</td>
                                         </tbody>
                                     </table>
                                 </div>
-                                <Pagination
+                                {/* <Pagination
                                     onChange={handlePagePersonal}
                                     current={currentPageTranPersonal}
                                     pageSize={pageSize}
                                     total={listTransactionPersonal.length}
-                                />
+                                /> */}
+
+                                <div className="row">
+                                    <div className="col text-left">
+                                        <Input
+                                            style={{ width: "200px" }}
+                                            size="small"
+                                            placeholder="Tìm kiếm giao dịch"
+                                            prefix={<FaSearch />}
+                                            onKeyDown={handleKeyPresPersonalIncome}
+                                        />
+                                    </div>
+                                    <div className="col text-center" style={{ margin: "5px" }}>
+                                        <h5>Thu nhập cá nhân gần đây</h5>
+                                    </div>
+                                    <div className="col text-right">
+                                        <RangePicker size="small" onChange={handleRangePickerChangeIncome} />
+                                    </div>
+                                </div>
+                                <div className="d-flex text-muted overflow-auto center">
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" className="col-2 col-name">Tên giao dịch</th>
+                                                <th scope="col" className="col-1 col-name">Số tiền</th>
+                                                <th scope="col" className="col-1 col-name">Ngày GD</th>
+                                                <th scope="col" className="col-2 col-name">Địa điểm</th>
+                                                <th scope="col" className="col-2 col-name">Danh mục</th>
+                                                <th scope="col" className="col-1 col-name">Tác vụ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {allTransactionIncomeNearest.map((item, index) => (
+                                                <tr key={item.id}>
+                                                    <td>{item.name}</td>
+                                                    <td>{item.amount?.toLocaleString("vi", {
+                                                        style: "currency",
+                                                        currency: "VND",
+                                                    })}</td>
+                                                    <td>{new Date(item.date).toLocaleDateString(
+                                                        "en-GB"
+                                                    )}</td>
+                                                    <td>{item.location}</td>
+                                                    <td>{item.userCategory.name}</td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>
+                                                        <button type="button"
+                                                            className="btn btn-outline-warning btn-light btn-sm mx-sm-1 px-lg-2 w-32"
+                                                            title="Chỉnh sửa" id={item.id} onClick={() => {
+                                                                openModalUpdateTransaction(item);
+                                                            }}>
+                                                            <FaPen /></button>
+                                                        <button type="button" id={item.id}
+                                                            className="btn btn-outline-danger btn-light btn-sm mx-sm-1 px-lg-2 w-32"
+                                                            title="Xóa" onClick={() => {
+                                                                setSelectedTransaction(item);
+                                                                setIsModalDeleteTransaction(true);
+                                                            }} ><FaTrashAlt />
+                                                        </button>
+                                                    </td>
+                                                </tr>))}
+                                            <td>Tổng: {sumTotalIncomeTransactionPersonal?.toLocaleString("vi", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            })}</td>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* <Pagination
+                                    onChange={handlePagePersonal}
+                                    current={currentPageTranPersonal}
+                                    pageSize={pageSize}
+                                    total={listTransactionPersonal.length}
+                                /> */}
                             </div>
                             :
                             <div className={"center loading"}>
@@ -347,8 +563,12 @@ const TransactionPage = () => {
                                         size="small"
                                         placeholder="Tìm kiếm giao dịch"
                                         prefix={<FaSearch />}
+                                        onKeyDown={handleKeyPressFamily}
                                     />
                                     <DatePicker picker="month" size="small" placeholder="Chọn tháng" onChange={handleDateChange} />
+                                </div>
+                                <div className="col text-center">
+                                    <h5>Chi tiêu gia đình gần đây</h5>
                                 </div>
                                 <div className="col text-right">
                                     <button className="btn btn-default low-height-btn" title="Thêm" onClick={() => {
@@ -371,8 +591,8 @@ const TransactionPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {currentTranFamily.map((item, index) => (
-                                            <tr key={item.name}>
+                                        {allTransactionExpenseFamilyNearest.map((item, index) => (
+                                            <tr key={item.id}>
                                                 <td>{item.name}</td>
                                                 <td>{item.amount?.toLocaleString("vi", {
                                                     style: "currency",
@@ -396,15 +616,13 @@ const TransactionPage = () => {
                                                     </button>
                                                 </td>
                                             </tr>))}
+                                        <td>Tổng: {sumTotalExpenseTransactionFamily?.toLocaleString("vi", {
+                                            style: "currency",
+                                            currency: "VND",
+                                        })}</td>
                                     </tbody>
                                 </table>
                             </div>
-                            <Pagination
-                                onChange={handlePageFamily}
-                                current={currentPageTranFamily}
-                                pageSize={pageSize}
-                                total={listTransactionFamily.length}
-                            />
                         </div>
                         :
                         <div className={"center loading"}>
@@ -505,7 +723,7 @@ const TransactionPage = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-            
+
             <Modal title={<div className="text-center">Bạn có chắc muốn xóa giao dịch</div>} open={isModalDeleteTransaction} onOk={handleDeleteTransaction} onCancel={handleCancel}>
             </Modal>
         </>

@@ -2,27 +2,15 @@ import React, { useEffect, useState } from "react";
 import userLayout from "../../layout/userLayout";
 import { Card, Pagination } from "antd";
 import axiosApiInstance from "../../context/interceptor";
-import { Chart as chartjs, LineElement, CategoryScale, LinearScale, PointElement, Tooltip, BarElement, ArcElement } from 'chart.js';
-import Chart from "react-apexcharts";
 import ReactApexChart from "react-apexcharts";
-
-chartjs.register(
-    LineElement,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    Tooltip,
-    BarElement,
-    ArcElement,
-);
 
 const HomePage = () => {
     const [listIncomeInYear, setListIncomeInYear] = useState([]);
     const [listExpenseInYear, setListExpenseInYear] = useState([]);
     const [listExpenseFamilyInYear, setListExpenseFamilyInYear] = useState([]);
-    const [allTransactionIncomeInMonth, setListTransactionIncomeInMonth] = useState([]);
-    const [allTransactionExpenseInMonth, setListTransactionExpenseInMonth] = useState([]);
-    const [allTransactionExpenseFamilyInMonth, setListTransactionExpenseFamilyInMonth] = useState([]);
+    const [allTransactionIncomeNearest, setListTransactionIncomeNearest] = useState([]);
+    const [allTransactionExpenseNearest, setListTransactionExpenseNearest] = useState([]);
+    const [allTransactionExpenseFamilyNearest, setListTransactionExpenseFamilyNearest] = useState([]);
     const [listIncomeExpensePersonalAndExpenseFamily, setListIncomeExpensePersonalAndExpenseFamily] = useState([]);
     const [yearSelected, setYearSelected] = useState('2023');
     const today = new Date();
@@ -68,9 +56,9 @@ const HomePage = () => {
         return array.slice(startIndex, endIndex);
     };
 
-    const currentTransactionIncome = paginate(allTransactionIncomeInMonth, currentPageTransactionIncome, pageSize);
-    const currentTransactionExpense = paginate(allTransactionExpenseInMonth, currentPageTransactionExpense, pageSize);
-    const currentTransactionExpenseFamily = paginate(allTransactionExpenseFamilyInMonth, currentPageTransactionExpenseFamily, pageSize);
+    const currentTransactionIncome = paginate(allTransactionIncomeNearest, currentPageTransactionIncome, pageSize);
+    const currentTransactionExpense = paginate(allTransactionExpenseNearest, currentPageTransactionExpense, pageSize);
+    const currentTransactionExpenseFamily = paginate(allTransactionExpenseFamilyNearest, currentPageTransactionExpenseFamily, pageSize);
 
     const handlePageIncome = (pageNumber, pageSize) => {
         setCurrentPageTransactionIncome(pageNumber);
@@ -112,31 +100,25 @@ const HomePage = () => {
         }
     };
 
-    async function getAllTransactionIncomeInMonth() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/all-income-personal-month/${monthSelected}/2023`);
+    async function getAllTransactionIncomeNearest() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/10-income-personal-nearest`);
         if (result?.data?.status === 200) {
-            setListTransactionIncomeInMonth(result?.data?.data);
+            setListTransactionIncomeNearest(result?.data?.data);
         }
-        else
-            setListTransactionIncomeInMonth([]);
     };
 
-    async function getAllTransactionExpenseInMonth() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/all-expense-personal-month/${monthSelected}/2023`);
+    async function getAllTransactionExpenseNearest() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/10-expense-personal-nearest`);
         if (result?.data?.status === 200) {
-            setListTransactionExpenseInMonth(result?.data?.data);
+            setListTransactionExpenseNearest(result?.data?.data);
         }
-        else
-            setListTransactionExpenseInMonth([]);
     };
 
-    async function getAllTransactionExpenseFamilyInMonth() {
-        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/all-expense-family-month/${monthSelected}/2023`);
+    async function getAllTransactionExpenseFamilyNearest() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/5-expense-family-nearest`);
         if (result?.data?.status === 200) {
-            setListTransactionExpenseFamilyInMonth(result?.data?.data || []);
+            setListTransactionExpenseFamilyNearest(result?.data?.data || []);
         }
-        else
-            setListTransactionExpenseFamilyInMonth([]);
     };
 
 
@@ -268,6 +250,10 @@ const HomePage = () => {
                 text: "Thống kê thu nhập và chi tiêu"
             },
             dataLabels: {
+                style: {
+                    colors: ['#333333', '#333333', '#333333'], // Mảng chứa mã màu của các chữ trong nhãn
+                    fontSize: '16px', // Kích thước chữ
+                },
                 formatter(val, opts) {
                     const name = opts.w.globals.labels[opts.seriesIndex]
                     return [name, val.toFixed(2) + '%']
@@ -275,6 +261,9 @@ const HomePage = () => {
             },
             legend: {
                 show: false
+            },
+            fill: {
+                colors: ['#33FFFF', '#FFFF33', '#f1bcbc']
             }
         },
     };
@@ -284,14 +273,14 @@ const HomePage = () => {
         getListTotalIncome();
         getListTotalExpenseFamily();
         getTotalIncomeExpensePersonalAndExpenseFamilyInMonth();
-        getAllTransactionIncomeInMonth();
-        getAllTransactionExpenseInMonth();
-        getAllTransactionExpenseFamilyInMonth();
     }, [yearSelected, monthSelected]);
 
     useEffect(() => {
         setFiveYear();
         setMonthInYear();
+        getAllTransactionIncomeNearest();
+        getAllTransactionExpenseNearest();
+        getAllTransactionExpenseFamilyNearest();
     }, []);
 
     return (
@@ -307,7 +296,13 @@ const HomePage = () => {
                         </select>
                         <div className="d-flex">
                             <Card title="" bordered={false} style={{ width: '50%', margin: '2px' }}>
-                                <ReactApexChart options={dataIncomeExpensePersonalAndExpenseFamilyInMonth.options} series={dataIncomeExpensePersonalAndExpenseFamilyInMonth.series} type="pie" height={300} />
+                                <div>
+                                    <ReactApexChart options={dataIncomeExpensePersonalAndExpenseFamilyInMonth.options} series={dataIncomeExpensePersonalAndExpenseFamilyInMonth.series} type="pie" height={300} />
+                                    <div className="text-center">
+                                            <h5>Tổng chi: {(listIncomeExpensePersonalAndExpenseFamily[1] + listIncomeExpensePersonalAndExpenseFamily[2])?.toLocaleString("vi", { style: "currency", currency: "VND" })}</h5>
+                                            <h5>Tổng thu: {(listIncomeExpensePersonalAndExpenseFamily[0])?.toLocaleString("vi", { style: "currency", currency: "VND" })}</h5>
+                                    </div>
+                                </div>
                             </Card>
                             <Card title="Chi tiêu gia đình gần đây" bordered={false} style={{ width: '50%', margin: '2px' }}>
                                 <table className="table">
@@ -340,7 +335,7 @@ const HomePage = () => {
                                     onChange={handlePageExpenseFamily}
                                     current={currentPageTransactionExpenseFamily}
                                     pageSize={pageSize}
-                                    total={allTransactionExpenseFamilyInMonth.length}
+                                    total={allTransactionExpenseFamilyNearest.length}
                                 />
                             </Card>
                         </div>
@@ -376,7 +371,7 @@ const HomePage = () => {
                                     onChange={handlePageIncome}
                                     current={currentPageTransactionIncome}
                                     pageSize={pageSize}
-                                    total={allTransactionIncomeInMonth.length}
+                                    total={allTransactionIncomeNearest.length}
                                 />
                             </Card>
                             <Card title="Chi tiêu cá nhân gần đây" bordered={false} style={{ width: '50%', margin: '2px', height: '350px' }}>
@@ -410,7 +405,7 @@ const HomePage = () => {
                                     onChange={handlePageExpense}
                                     current={currentPageTransactionExpense}
                                     pageSize={pageSize}
-                                    total={allTransactionExpenseInMonth.length}
+                                    total={allTransactionExpenseNearest.length}
                                 />
                             </Card>
                         </div>

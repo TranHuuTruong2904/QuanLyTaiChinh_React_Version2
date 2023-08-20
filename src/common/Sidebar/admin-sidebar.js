@@ -29,7 +29,7 @@ const Sidebar = ({ isActive, toggleSidebar }) => {
         {
             icon: <i className="fa fa-list"></i>,
             path: "/category",
-            name: "QL danh mục",
+            name: "QL loại danh mục",
         },
         {
             icon: <i className="fa fa-money-bill "></i>,

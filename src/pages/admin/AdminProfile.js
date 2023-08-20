@@ -3,18 +3,35 @@ import adminLayout from "../../layout/adminLayout";
 import { useState } from "react";
 import axiosApiInstance from "../../context/interceptor";
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 const AdminProfile = () => {
 
     const [admin, setAdmin] = useState(null);
-    
+
     async function getProfile() {
         const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/auth/profile`);
-        if(result?.data?.status === 200)
-        {
+        if (result?.data?.status === 200) {
             setAdmin(result?.data?.data);
         }
     };
+
+    const [updateProfile, setUpdateProfile] = useState({
+        firstname: "",
+        lastname: "",
+    });
+
+    const handleUpdateProfile = async (event) => {
+        event.preventDefault();
+        const result = await axiosApiInstance.put(axiosApiInstance.defaults.baseURL + `/api/auth/profile/update`, updateProfile);
+        if (result?.data?.status === 200) {
+            toast.success("Thay đổi thông tin thành công");
+        }
+        else {
+            toast.error("Có lỗi. Vui lòng thử lại");
+        }
+    }
+
 
     useEffect(() => {
         getProfile();
@@ -31,7 +48,7 @@ const AdminProfile = () => {
                                 <div className="col">
                                     <label htmlFor="exampleInputEmail1" className="form-label">Username</label>
                                     <div className="input-group mb-3">
-                                        <input type="text" className="form-control" placeholder="Username" value={admin?.accountModel?.username}/>
+                                        <input type="text" className="form-control" placeholder="Username" value={admin?.accountModel?.username} />
                                         <span className="input-group-text" id="basic-addon2"><i className="fa fa-user"></i></span>
                                     </div>
                                 </div>
@@ -47,19 +64,21 @@ const AdminProfile = () => {
                                 <div className="col">
                                     <label htmlFor="exampleInputEmail1" className="form-label">First Name</label>
                                     <div className="input-group mb-3">
-                                        <input type="text" className="form-control" placeholder="First Name" value={admin?.firstname} />
+                                        <input type="text" className="form-control" placeholder="First Name" defaultValue={admin?.firstname}
+                                            onChange={(e) => setUpdateProfile({ ...updateProfile, firstname: e.target.value })} />
                                         <span className="input-group-text" id="basic-addon2"><i className="fa fa-user"></i></span>
                                     </div>
                                 </div>
                                 <div className="col">
                                     <label htmlFor="exampleInputEmail1" className="form-label">Last Name</label>
                                     <div className="input-group mb-3">
-                                        <input type="text" className="form-control" placeholder="Last Name" value={admin?.lastname} />
+                                        <input type="text" className="form-control" placeholder="Last Name" defaultValue={admin?.lastname}
+                                            onChange={(e) => setUpdateProfile({ ...updateProfile, lastname: e.target.value })} />
                                         <span className="input-group-text" id="basic-addon2"><i className="fa fa-user"></i></span>
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" className="btn btn-default">Submit</button>
+                            <button type="submit" className="btn btn-default" onClick={handleUpdateProfile}>Submit</button>
                         </form>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import axiosApiInstance from "../../context/interceptor";
+import { FaFacebook } from "react-icons/fa";
 
 const RegisterPage = () => {
 
@@ -134,6 +135,36 @@ const RegisterPage = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div>
+                <footer id="footer" className="">
+                    <footer className="bg-light fixed-bottom" id="tempaltemo_footer">
+                        <div className="container footer-center">
+                            <div className="row">
+                                <div className="col-md-4 pt-5">
+                                    <h3 className="h3 fw-bolder text-dark border-bottom pb-3 border-light">
+                                        Thông tin liên hệ:
+                                    </h3>
+                                    <p className="text-dark">
+                                        Email : tranhuutruong290401@gmail.com
+                                    </p>
+                                    <p className="text-dark">Số điện thoại : 0987654321</p>
+                                </div>
+
+                                <div className="col-md-2 pt-5">
+                                    <h3 className="h3 fw-bolder text-dark border-bottom pb-3 border-light">
+                                        Fanpage
+                                    </h3>
+                                    <a className="btn bg-primary btn-floating m-1"
+                                        href="https://www.facebook.com/profile.php?id=100091576287029&sk=photos">
+                                        <FaFacebook />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </footer>
             </div>
         </>
     )

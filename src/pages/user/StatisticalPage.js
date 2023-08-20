@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
 import userLayout from "../../layout/userLayout";
 import { useState } from "react";
-import { Select, DatePicker } from "antd";
+import { Select, DatePicker, Card } from "antd";
 import axiosApiInstance from "../../context/interceptor";
+import { toast } from "react-toastify";
+import ReactApexChart from "react-apexcharts";
 import * as XLSX from 'xlsx'
 import { saveAs } from "file-saver";
 const { RangePicker } = DatePicker;
@@ -58,8 +60,8 @@ const StatisticalPage = () => {
     const handleRangePickerChange = (dates) => {
         if (dates && dates.length === 2) {
             const [start, end] = dates;
-            const formattedStartDate = formatDate(start); // Định dạng startDate thành chuỗi yyyy-mm-dd
-            const formattedEndDate = formatDate(end); // Định dạng endDate thành chuỗi yyyy-mm-dd
+            const formattedStartDate = formatDate(start);
+            const formattedEndDate = formatDate(end);
             setStartDate(formattedStartDate);
             setEndDate(formattedEndDate);
         } else {
@@ -110,157 +112,244 @@ const StatisticalPage = () => {
     const handleExportExcelAllInMonth = () => {
         const workbook = XLSX.utils.book_new();
 
-        const modifiedData = listTransactionInMonth.map(item => ({
-            'Mã giao dịch': item.id,
-            'Tên giao dịch': item.name,
-            'Số tiền': item.amount,
-            'Địa điểm': item.location,
-            'Ngày': item.date,
-            'Ghi chú': item.description,
-            'Danh mục chi tiêu': item.userCategory.name,
-            'Loại giao dịch': item.transactionType.name,
-            'Loại danh mục': item.userCategory.category.name,
-        }));
+        if (listTransactionInMonth.length === 0) {
+            toast.error("Chưa có dữ liệu để xuất file");
+        }
+        else {
+            const modifiedData = listTransactionInMonth.map(item => ({
+                'Mã giao dịch': item.id,
+                'Tên giao dịch': item.name,
+                'Số tiền': item.amount,
+                'Địa điểm': item.location,
+                'Ngày': item.date,
+                'Ghi chú': item.description,
+                'Danh mục chi tiêu': item.userCategory.name,
+                'Loại giao dịch': item.transactionType.name,
+                'Loại danh mục': item.userCategory.category.name,
+            }));
 
-        // Sheet 1: Thu nhập
-        const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Thu nhập');
-        const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
-        XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Personal');
+            // Sheet 1: Thu nhập
+            const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Thu nhập');
+            const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
+            XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Cá nhân');
 
-        // Tính tổng tiền cho sheet Thu nhập
-        const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
-        const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Thu nhập
+            const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
+            const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
 
-        // Sheet 2: Chi tiêu - Personal
-        const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Chi tiêu');
-        const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
-        XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Personal');
+            // Sheet 2: Chi tiêu - Personal
+            const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Chi tiêu');
+            const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
+            XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Cá nhân');
 
-        const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
+            const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
 
-        // Sheet 3: Chi tiêu - Family
-        const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Family');
-        const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
-        XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Family');
+            // Sheet 3: Chi tiêu - Family
+            const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Gia đình');
+            const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
+            XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Gia đình');
 
-        // Tính tổng tiền cho sheet Chi tiêu - Family
-        const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Chi tiêu - Family
+            const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
 
-        // Xuất file
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const fileName = 'Thống kê giao dịch tháng : ' + monthSelected;
-        saveAs(dataBlob, fileName);
+            // Xuất file
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const fileName = 'Thống kê giao dịch tháng : ' + monthSelected;
+            saveAs(dataBlob, fileName);
+        }
     };
 
     // xuất dữ liệu excel theo năm
     const handleExportExcelAllInYear = () => {
         const workbook = XLSX.utils.book_new();
 
-        const modifiedData = listTransactionInYear.map(item => ({
-            'Mã giao dịch': item.id,
-            'Tên giao dịch': item.name,
-            'Số tiền': item.amount,
-            'Địa điểm': item.location,
-            'Ngày': item.date,
-            'Ghi chú': item.description,
-            'Danh mục chi tiêu': item.userCategory.name,
-            'Loại giao dịch': item.transactionType.name,
-            'Loại danh mục': item.userCategory.category.name,
-        }));
+        if (listTransactionInYear.length === 0) {
+            toast.error("Chưa có dữ liệu để xuất file");
+        }
+        else {
+            const modifiedData = listTransactionInYear.map(item => ({
+                'Mã giao dịch': item.id,
+                'Tên giao dịch': item.name,
+                'Số tiền': item.amount,
+                'Địa điểm': item.location,
+                'Ngày': item.date,
+                'Ghi chú': item.description,
+                'Danh mục chi tiêu': item.userCategory.name,
+                'Loại giao dịch': item.transactionType.name,
+                'Loại danh mục': item.userCategory.category.name,
+            }));
 
-        // Sheet 1: Thu nhập
-        const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Thu nhập');
-        const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
-        XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Personal');
+            // Sheet 1: Thu nhập
+            const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Thu nhập');
+            const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
+            XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Cá nhân');
 
-        // Tính tổng tiền cho sheet Thu nhập
-        const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
-        const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Thu nhập
+            const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
+            const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
 
-        // Sheet 2: Chi tiêu - Personal
-        const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Chi tiêu');
-        const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
-        XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Personal');
+            // Sheet 2: Chi tiêu - Personal
+            const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Chi tiêu');
+            const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
+            XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Cá nhân');
 
-        const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
+            const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
 
-        // Sheet 3: Chi tiêu - Family
-        const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Family');
-        const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
-        XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Family');
+            // Sheet 3: Chi tiêu - Family
+            const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Gia đình');
+            const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
+            XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Gia đình');
 
-        // Tính tổng tiền cho sheet Chi tiêu - Family
-        const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Chi tiêu - Family
+            const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
 
-        // Xuất file
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const fileName = 'Thống kê giao dịch năm : ' + yearSelected;
-        saveAs(dataBlob, fileName);
+            // Xuất file
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const fileName = 'Thống kê giao dịch năm : ' + yearSelected;
+            saveAs(dataBlob, fileName);
+        }
     };
 
     // xuất excel giao dịch theo khoảng thời gian
     const handleExportExcelAllInTimeRange = () => {
         const workbook = XLSX.utils.book_new();
 
-        const modifiedData = listTransactionInRangeTime.map(item => ({
-            'Mã giao dịch': item.id,
-            'Tên giao dịch': item.name,
-            'Số tiền': item.amount,
-            'Địa điểm': item.location,
-            'Ngày': item.date,
-            'Ghi chú': item.description,
-            'Danh mục chi tiêu': item.userCategory.name,
-            'Loại giao dịch': item.transactionType.name,
-            'Loại danh mục': item.userCategory.category.name,
-        }));
+        if (listTransactionInRangeTime.length === 0) {
+            toast.error("Chưa có dữ liệu để xuất file");
+        }
+        else {
+            const modifiedData = listTransactionInRangeTime.map(item => ({
+                'Mã giao dịch': item.id,
+                'Tên giao dịch': item.name,
+                'Số tiền': item.amount,
+                'Địa điểm': item.location,
+                'Ngày': item.date,
+                'Ghi chú': item.description,
+                'Danh mục chi tiêu': item.userCategory.name,
+                'Loại giao dịch': item.transactionType.name,
+                'Loại danh mục': item.userCategory.category.name,
+            }));
 
-        // Sheet 1: Thu nhập
-        const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Thu nhập');
-        const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
-        XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Personal');
+            // Sheet 1: Thu nhập
+            const incomeSheetData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Thu nhập');
+            const incomeSheet = XLSX.utils.json_to_sheet(incomeSheetData);
+            XLSX.utils.book_append_sheet(workbook, incomeSheet, 'Thu nhập - Cá nhân');
 
-        // Tính tổng tiền cho sheet Thu nhập
-        const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
-        const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Thu nhập
+            const incomeTotal = incomeSheetData.reduce((total, item) => total + item['Số tiền'], 0);
+            const incomeTotalRow = [{}, 'Tổng tiền', incomeTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(incomeSheet, [incomeTotalRow], { origin: -1 });
 
-        // Sheet 2: Chi tiêu - Personal
-        const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Personal' && item['Loại danh mục'] === 'Chi tiêu');
-        const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
-        XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Personal');
+            // Sheet 2: Chi tiêu - Personal
+            const expensePersonalData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Cá nhân' && item['Loại danh mục'] === 'Chi tiêu');
+            const expensePersonalSheet = XLSX.utils.json_to_sheet(expensePersonalData);
+            XLSX.utils.book_append_sheet(workbook, expensePersonalSheet, 'Chi tiêu - Cá nhân');
 
-        const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
+            const expensePersonalTotal = expensePersonalData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expensePersonalTotalRow = [{}, 'Tổng tiền', expensePersonalTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expensePersonalSheet, [expensePersonalTotalRow], { origin: -1 });
 
-        // Sheet 3: Chi tiêu - Family
-        const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Family');
-        const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
-        XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Family');
+            // Sheet 3: Chi tiêu - Family
+            const expenseFamilyData = modifiedData.filter((item) => item['Loại giao dịch'] === 'Gia đình');
+            const expenseFamilySheet = XLSX.utils.json_to_sheet(expenseFamilyData);
+            XLSX.utils.book_append_sheet(workbook, expenseFamilySheet, 'Chi tiêu - Gia đình');
 
-        // Tính tổng tiền cho sheet Chi tiêu - Family
-        const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
-        const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
-        XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
+            // Tính tổng tiền cho sheet Chi tiêu - Family
+            const expenseFamilyTotal = expenseFamilyData.reduce((total, item) => total + item['Số tiền'], 0);
+            const expenseFamilyTotalRow = [{}, 'Tổng tiền', expenseFamilyTotal, {}, {}, {}, {}, {}, {}];
+            XLSX.utils.sheet_add_aoa(expenseFamilySheet, [expenseFamilyTotalRow], { origin: -1 });
 
-        // Xuất file
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const fileName = 'Thống kê giao dịch từ : ' + startDate + ' đến ' + endDate;
-        saveAs(dataBlob, fileName);
+            // Xuất file
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const fileName = 'Thống kê giao dịch từ : ' + startDate + ' đến ' + endDate;
+            saveAs(dataBlob, fileName);
+        }
     };
+
+
+    // lấy dữ liệu thu nhập và chi tiếu gia đình và cá nhân qua các tháng để vẽ biểu đồ cột
+    const [listTotalIncomePersonalInYear, setListTotalIncomePersonalInYear] = useState([]);
+    const [listTotalExpensePersonalInYear, setListTotalExpensePersonalInYear] = useState([]);
+    const [listTotalExpenseFamilyInYear, setListTotalExpenseFamilyInYear] = useState([]);
+
+    async function getTotalIncomeAndExpensePersonalAndExpenseFamilyInYear() {
+        const result = await axiosApiInstance.get(axiosApiInstance.defaults.baseURL + `/api/transaction/total-income-expense-personal-and-expense-family/${yearSelected}`);
+        if (result?.data?.status === 200) {
+            setListTotalIncomePersonalInYear(result?.data?.listTotalIncomePersonalInYear);
+            setListTotalExpensePersonalInYear(result?.data?.listTotalExpensePersonalInYear);
+            setListTotalExpenseFamilyInYear(result?.data?.listTotalExpenseFamilyInYear);
+        }
+    };
+
+
+    const dataGetTotalIncomeAndExpensePersonalAndExpenseFamilyInYear = {
+        series: [{
+            name: 'Thu nhập cá nhân',
+            data: listTotalIncomePersonalInYear
+        }, {
+            name: 'Chi tiêu cá nhân',
+            data: listTotalExpensePersonalInYear
+        }, {
+            name: 'Chi tiêu gia đình',
+            data: listTotalExpenseFamilyInYear
+        }],
+        options: {
+            chart: {
+                type: 'bar',
+                height: 350
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            },
+            yaxis: {
+                title: {
+                    text: ' vnđ'
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " vnđ"
+                    }
+                }
+            }
+        }
+    };
+
+    useEffect(() => {
+        getTotalIncomeAndExpensePersonalAndExpenseFamilyInYear();
+    }, [yearSelected]);
 
     useEffect(() => {
         getAllTransactionInMonth();
@@ -309,6 +398,9 @@ const StatisticalPage = () => {
                                     </button>
                                 </div>
                             </div>
+                            <Card title="Biểu đồ thống kê chi tiêu theo năm" style={{ marginBottom: "10px" }}>
+                                <ReactApexChart options={dataGetTotalIncomeAndExpensePersonalAndExpenseFamilyInYear.options} series={dataGetTotalIncomeAndExpensePersonalAndExpenseFamilyInYear.series} type="bar" height={350} />
+                            </Card>
                             <div className="d-flex text-muted overflow-auto center">
                                 <table className="table">
                                     <thead>
@@ -318,6 +410,7 @@ const StatisticalPage = () => {
                                             <th scope="col" className="col-1 col-name">Ngày GD</th>
                                             <th scope="col" className="col-3 col-name">Địa điểm</th>
                                             <th scope="col" className="col-2 col-name">Danh mục</th>
+                                            <th scope="col" className="col-1 col-name">Loại</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -333,6 +426,7 @@ const StatisticalPage = () => {
                                                 )}</td>
                                                 <td>{item.location}</td>
                                                 <td>{item.userCategory.name}</td>
+                                                <td>{item.userCategory.category.name}</td>
                                             </tr>))}
                                     </tbody>
                                 </table>
@@ -357,6 +451,9 @@ const StatisticalPage = () => {
                                     </button>
                                 </div>
                             </div>
+                            <Card title="Biểu đồ thống kê chi tiêu theo năm" style={{ marginBottom: "10px" }}>
+                                <ReactApexChart options={dataGetTotalIncomeAndExpensePersonalAndExpenseFamilyInYear.options} series={dataGetTotalIncomeAndExpensePersonalAndExpenseFamilyInYear.series} type="bar" height={350} />
+                            </Card>
                             <div className="d-flex text-muted overflow-auto center">
                                 <table className="table">
                                     <thead>
@@ -366,6 +463,7 @@ const StatisticalPage = () => {
                                             <th scope="col" className="col-1 col-name">Ngày GD</th>
                                             <th scope="col" className="col-3 col-name">Địa điểm</th>
                                             <th scope="col" className="col-2 col-name">Danh mục</th>
+                                            <th scope="col" className="col-1 col-name">Loại</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -381,6 +479,7 @@ const StatisticalPage = () => {
                                                 )}</td>
                                                 <td>{item.location}</td>
                                                 <td>{item.userCategory.name}</td>
+                                                <td>{item.userCategory.category.name}</td>
                                             </tr>))}
                                     </tbody>
                                 </table>
@@ -409,6 +508,7 @@ const StatisticalPage = () => {
                                             <th scope="col" className="col-1 col-name">Ngày GD</th>
                                             <th scope="col" className="col-3 col-name">Địa điểm</th>
                                             <th scope="col" className="col-2 col-name">Danh mục</th>
+                                            <th scope="col" className="col-1 col-name">Loại</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -424,6 +524,7 @@ const StatisticalPage = () => {
                                                 )}</td>
                                                 <td>{item.location}</td>
                                                 <td>{item.userCategory.name}</td>
+                                                <td>{item.userCategory.category.name}</td>
                                             </tr>))}
                                     </tbody>
                                 </table>
