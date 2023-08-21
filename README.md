@@ -1,7 +1,6 @@
+<h2 align="center">Xây dựng giao diện sử dụng ReactJS - Đồ án thực tập tốt nghiệp D19 PTITHCM</h2>
 
-<h2 align="center">Xây dựng giao diện sử dụng ReactJS - Đồ án thực tập tốt nghiệp D19 PTIT</h2>
-
-<h3 align="center">Giao diện đồ án Quản lý tài chính cá nhân và gia đình</h3>
+<h3 align="center">Đồ án: Xây dựng ứng dụng quản lý tài chính cá nhân và gia đình</h3>
 
 - **Giao diện đăng nhập**
 ![image](https://github.com/thtruong2904/QuanLyTaiChinh-React-V2/assets/83656656/5cd3665c-a083-4c78-9045-7ea1c97f47df)
